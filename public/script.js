@@ -29,7 +29,7 @@ document.addEventListener('mousemove', (event) => {
   rightEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
 });
 
-// Load chat history from localStorage
+// Load chat history
 function loadHistory() {
   const history = JSON.parse(localStorage.getItem('cutieHistory') || '[]');
   historyList.innerHTML = '';
@@ -43,7 +43,7 @@ function loadHistory() {
   });
 }
 
-// Save current chat to history
+// Save chat
 function saveHistory() {
   const history = JSON.parse(localStorage.getItem('cutieHistory') || '[]');
   history.push(messages.innerHTML);
@@ -51,7 +51,7 @@ function saveHistory() {
   loadHistory();
 }
 
-// Add message to chat
+// Add message
 function addMessage(text, sender) {
   const msgDiv = document.createElement('div');
   msgDiv.className = sender;
@@ -60,26 +60,33 @@ function addMessage(text, sender) {
   messages.scrollTop = messages.scrollHeight;
 }
 
-// Simulate bot reply
-function getBotReply(userText) {
-  return "Cutie Patootie heard: " + userText;
-}
-
-// Handle chat submission
-chatForm.addEventListener('submit', (e) => {
+// Handle chat submit
+chatForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const text = userInput.value.trim();
   if (!text) return;
+
   addMessage(text, 'user');
   userInput.value = '';
 
-  setTimeout(() => {
-    const reply = getBotReply(text);
-    addMessage(reply, 'bot');
-  }, 600);
+  try {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+    addMessage(data.reply, 'bot');
+  } catch (error) {
+    addMessage("❌ Cutie got an error! Try again later.", 'bot');
+    console.error('Error:', error);
+  }
 });
 
-// New chat button
+// New chat
 newChatBtn.addEventListener('click', () => {
   if (messages.innerHTML.trim()) {
     saveHistory();
