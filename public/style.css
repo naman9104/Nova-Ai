@@ -2,12 +2,12 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Comic Sans MS", cursive, sans-serif;
+  font-family: 'Orbitron', sans-serif;
   word-break: break-word;
 }
 
 body {
-  background: linear-gradient(135deg, #ffb6c1, #add8e6, #dda0dd);
+  background: linear-gradient(135deg, #00c3ff, #72f3a6, #b0e0ff);
   height: 100vh;
   display: flex;
   justify-content: center;
@@ -18,29 +18,30 @@ body {
 #chatbot {
   display: flex;
   flex-direction: column;
-  background: white;
-  width: 400px;
-  max-height: 90vh;
+  background: #ffffff;
+  width: 90vw;
+  max-width: 420px;
+  height: 90vh;
   border-radius: 20px;
-  box-shadow: 0 0 25px rgb(255, 162, 209);
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
   overflow: hidden;
   z-index: 1;
 }
 
 #bot-face {
-  background: #ffe4f0;
+  background: #d1f9ff;
   height: 120px;
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
-  aspect-ratio: 1 / 1; /* Keeps face square */
+  aspect-ratio: 1 / 1;
 }
 
 .eye {
   width: 20px;
   height: 20px;
-  background: #000;
+  background: #003366;
   margin: 0 10px;
   border-radius: 4px;
 }
@@ -48,7 +49,7 @@ body {
 .mouth {
   width: 50px;
   height: 8px;
-  background: #000;
+  background: #003366;
   position: absolute;
   bottom: 25px;
   border-radius: 4px;
@@ -74,15 +75,16 @@ body {
   border-radius: 10px;
   max-width: 80%;
   word-break: break-word;
+  font-size: 0.95rem;
 }
 
 .user {
-  background-color: #efdcff;
+  background-color: #a6e3ff;
   align-self: flex-end;
 }
 
 .bot {
-  background-color: #ff9fe7;
+  background-color: #d0d5ff;
   align-self: flex-start;
 }
 
@@ -95,23 +97,25 @@ body {
   flex: 1;
   padding: 10px;
   border-radius: 10px;
-  border: 2px solid #ddd;
+  border: 2px solid #88c9f0;
   outline: none;
+  font-size: 1rem;
 }
 
 button {
   width: 80px;
-  background: #000000;
+  background: #004466;
   color: white;
   border: none;
   padding: 10px 15px;
   border-radius: 10px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 1rem;
 }
 
 button:hover {
-  background: #ff1493;
+  background: #00a0d0;
 }
 
 /* Sidebar */
@@ -121,13 +125,13 @@ button:hover {
   top: 0;
   height: 100%;
   width: 250px;
-  background: #1b1b2f;
+  background: #1a1a2e;
   color: white;
   padding: 20px;
   overflow-y: auto;
   transition: left 0.3s;
   z-index: 999;
-  border-right: 2px solid #ff69b4;
+  border-right: 2px solid #00d9ff;
 }
 
 .sidebar.open {
@@ -137,7 +141,7 @@ button:hover {
 .sidebar h2 {
   text-align: center;
   margin-bottom: 15px;
-  color: #ff69b4;
+  color: #00d9ff;
 }
 
 .sidebar ul {
@@ -146,28 +150,28 @@ button:hover {
 }
 
 .sidebar li {
-  background: #29294d;
+  background: #2e2e50;
   padding: 10px;
   margin: 10px 0;
-  border-left: 4px solid #ff69b4;
+  border-left: 4px solid #00d9ff;
   font-size: 14px;
   border-radius: 5px;
 }
 
-/* Stylish Ribbon Button */
+/* Ribbon Button */
 #toggleSidebarBtn {
   position: fixed;
   top: 20px;
   left: 10px;
   z-index: 1000;
-  background: linear-gradient(145deg, #ff69b4, #ffb6c1);
+  background: linear-gradient(145deg, #007acc, #00f0ff);
   color: white;
   border: none;
   padding: 10px 16px;
-  border-radius: 50% 50% 50% 50%;
+  border-radius: 50%;
   font-size: 18px;
   cursor: pointer;
-  box-shadow: 0 0 15px #ff69b4;
+  box-shadow: 0 0 15px rgba(0, 238, 255, 0.4);
   animation: bounce 1.2s infinite;
   transition: transform 0.2s;
 }
@@ -182,5 +186,40 @@ button:hover {
   }
   50% {
     transform: translateY(-4px);
+  }
+}
+
+/* Responsive Enhancements */
+@media (max-width: 600px) {
+  #chatbot {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  #chat-container {
+    padding: 10px;
+  }
+
+  #messages div {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+
+  #user-input {
+    font-size: 0.9rem;
+  }
+
+  button {
+    width: 70px;
+    font-size: 0.9rem;
+  }
+
+  .sidebar {
+    width: 200px;
+  }
+
+  .sidebar li {
+    font-size: 13px;
   }
 }
