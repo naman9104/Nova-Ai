@@ -1,225 +1,102 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Orbitron', sans-serif;
-  word-break: break-word;
+const chatForm = document.getElementById('chat-form');
+const userInput = document.getElementById('user-input');
+const messages = document.getElementById('messages');
+const newChatBtn = document.getElementById('new-chat');
+const sidebar = document.getElementById('chatHistorySidebar');
+const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+const historyList = document.getElementById('historyList');
+const botFace = document.getElementById('bot-face');
+const leftEye = document.querySelector('.left-eye');
+const rightEye = document.querySelector('.right-eye');
+
+// Eye follow cursor
+document.addEventListener('mousemove', (event) => {
+  const faceRect = botFace.getBoundingClientRect();
+  const centerX = faceRect.left + faceRect.width / 2;
+  const centerY = faceRect.top + faceRect.height / 2;
+
+  const deltaX = event.clientX - centerX;
+  const deltaY = event.clientY - centerY;
+
+  const maxMove = 15;
+  const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+  const scale = Math.min(maxMove / distance, 1);
+
+  const moveX = deltaX * scale;
+  const moveY = deltaY * scale;
+
+  leftEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
+  rightEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
+});
+
+// Load chat history
+function loadHistory() {
+  const history = JSON.parse(localStorage.getItem('cutieHistory') || '[]');
+  historyList.innerHTML = '';
+  history.forEach((entry, index) => {
+    const li = document.createElement('li');
+    li.textContent = `Chat ${index + 1}`;
+    li.addEventListener('click', () => {
+      messages.innerHTML = entry;
+    });
+    historyList.appendChild(li);
+  });
 }
 
-body {
-  background: linear-gradient(135deg, #00c3ff, #72f3a6, #b0e0ff);
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
+// Save chat
+function saveHistory() {
+  const history = JSON.parse(localStorage.getItem('cutieHistory') || '[]');
+  history.push(messages.innerHTML);
+  localStorage.setItem('cutieHistory', JSON.stringify(history));
+  loadHistory();
 }
 
-#chatbot {
-  display: flex;
-  flex-direction: column;
-  background: #ffffff;
-  width: 90vw;
-  max-width: 420px;
-  height: 90vh;
-  border-radius: 20px;
-  box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
-  overflow: hidden;
-  z-index: 1;
+// Add message
+function addMessage(text, sender) {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = sender;
+  msgDiv.textContent = text;
+  messages.appendChild(msgDiv);
+  messages.scrollTop = messages.scrollHeight;
 }
 
-#bot-face {
-  background: #d1f9ff;
-  height: 120px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  aspect-ratio: 1 / 1;
-}
+// Handle chat submit
+chatForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = userInput.value.trim();
+  if (!text) return;
 
-.eye {
-  width: 20px;
-  height: 20px;
-  background: #003366;
-  margin: 0 10px;
-  border-radius: 4px;
-}
+  addMessage(text, 'user');
+  userInput.value = '';
 
-.mouth {
-  width: 50px;
-  height: 8px;
-  background: #003366;
-  position: absolute;
-  bottom: 25px;
-  border-radius: 4px;
-}
+  try {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: text })
+    });
 
-#chat-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 15px;
-  overflow-y: auto;
-}
-
-#messages {
-  flex: 1;
-  overflow-y: auto;
-  margin-bottom: 10px;
-}
-
-#messages div {
-  margin: 8px 0;
-  padding: 8px 12px;
-  border-radius: 10px;
-  max-width: 80%;
-  word-break: break-word;
-  font-size: 0.95rem;
-}
-
-.user {
-  background-color: #a6e3ff;
-  align-self: flex-end;
-}
-
-.bot {
-  background-color: #d0d5ff;
-  align-self: flex-start;
-}
-
-#chat-form {
-  display: flex;
-  gap: 10px;
-}
-
-#user-input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 10px;
-  border: 2px solid #88c9f0;
-  outline: none;
-  font-size: 1rem;
-}
-
-button {
-  width: 80px;
-  background: #004466;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 1rem;
-}
-
-button:hover {
-  background: #00a0d0;
-}
-
-/* Sidebar */
-.sidebar {
-  position: fixed;
-  left: -260px;
-  top: 0;
-  height: 100%;
-  width: 250px;
-  background: #1a1a2e;
-  color: white;
-  padding: 20px;
-  overflow-y: auto;
-  transition: left 0.3s;
-  z-index: 999;
-  border-right: 2px solid #00d9ff;
-}
-
-.sidebar.open {
-  left: 0;
-}
-
-.sidebar h2 {
-  text-align: center;
-  margin-bottom: 15px;
-  color: #00d9ff;
-}
-
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-}
-
-.sidebar li {
-  background: #2e2e50;
-  padding: 10px;
-  margin: 10px 0;
-  border-left: 4px solid #00d9ff;
-  font-size: 14px;
-  border-radius: 5px;
-}
-
-/* Ribbon Button */
-#toggleSidebarBtn {
-  position: fixed;
-  top: 20px;
-  left: 10px;
-  z-index: 1000;
-  background: linear-gradient(145deg, #007acc, #00f0ff);
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 50%;
-  font-size: 18px;
-  cursor: pointer;
-  box-shadow: 0 0 15px rgba(0, 238, 255, 0.4);
-  animation: bounce 1.2s infinite;
-  transition: transform 0.2s;
-}
-
-#toggleSidebarBtn:hover {
-  transform: scale(1.1);
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0px);
+    const data = await res.json();
+    addMessage(data.reply, 'bot');
+  } catch (error) {
+    addMessage("❌ Cutie got an error! Try again later.", 'bot');
+    console.error('Error:', error);
   }
-  50% {
-    transform: translateY(-4px);
-  }
-}
+});
 
-/* Responsive Enhancements */
-@media (max-width: 600px) {
-  #chatbot {
-    width: 100vw;
-    height: 100vh;
-    border-radius: 0;
+// New chat
+newChatBtn.addEventListener('click', () => {
+  if (messages.innerHTML.trim()) {
+    saveHistory();
   }
+  messages.innerHTML = '';
+});
 
-  #chat-container {
-    padding: 10px;
-  }
+// Sidebar toggle
+toggleSidebarBtn.addEventListener('click', () => {
+  sidebar.classList.toggle('open');
+});
 
-  #messages div {
-    font-size: 0.85rem;
-    padding: 6px 10px;
-  }
-
-  #user-input {
-    font-size: 0.9rem;
-  }
-
-  button {
-    width: 70px;
-    font-size: 0.9rem;
-  }
-
-  .sidebar {
-    width: 200px;
-  }
-
-  .sidebar li {
-    font-size: 13px;
-  }
-}
+loadHistory();
