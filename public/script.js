@@ -1,98 +1,95 @@
 const chatForm = document.getElementById('chat-form');
 const userInput = document.getElementById('user-input');
-const messagesDiv = document.getElementById('messages');
-const historyList = document.getElementById('historyList');
+const messages = document.getElementById('messages');
+const newChatBtn = document.getElementById('new-chat');
 const sidebar = document.getElementById('chatHistorySidebar');
 const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
-const newChatBtn = document.getElementById('new-chat');
+const historyList = document.getElementById('historyList');
+const botFace = document.getElementById('bot-face');
+const leftEye = document.querySelector('.left-eye');
+const rightEye = document.querySelector('.right-eye');
 
-let chatCounter = localStorage.getItem('chatCounter') || 0;
-let currentChatId = null;
-let messages = [];
+// Eye follow cursor
+document.addEventListener('mousemove', (event) => {
+  const faceRect = botFace.getBoundingClientRect();
+  const centerX = faceRect.left + faceRect.width / 2;
+  const centerY = faceRect.top + faceRect.height / 2;
 
-// Submit form handler
-chatForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const message = userInput.value.trim();
-  if (!message) return;
+  const deltaX = event.clientX - centerX;
+  const deltaY = event.clientY - centerY;
 
-  appendMessage('user', message);
-  messages.push({ role: 'user', text: message });
-  userInput.value = '';
+  const maxMove = 15;
+  const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+  const scale = Math.min(maxMove / distance, 1);
 
-  try {
-    const res = await fetch('/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
-    });
-    const data = await res.json();
-    appendMessage('bot', data.reply);
-    messages.push({ role: 'bot', text: data.reply });
-    saveCurrentChat();
-    updateSidebar();
-  } catch (err) {
-    appendMessage('bot', 'Oops! Something went wrong.');
-  }
+  const moveX = deltaX * scale;
+  const moveY = deltaY * scale;
+
+  leftEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
+  rightEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
 });
 
-// Append message to DOM
-function appendMessage(sender, text) {
-  const div = document.createElement('div');
-  div.className = sender;
-  div.innerText = text;
-  messagesDiv.appendChild(div);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
-
-// Save current chat to localStorage
-function saveCurrentChat() {
-  if (messages.length === 0) return;
-  const id = currentChatId || `chat_${++chatCounter}`;
-  localStorage.setItem(id, JSON.stringify(messages));
-  localStorage.setItem('chatCounter', chatCounter);
-  currentChatId = id;
-}
-
-// Load chat into view
-function loadChat(id) {
-  const stored = localStorage.getItem(id);
-  if (!stored) return;
-  messages = JSON.parse(stored);
-  currentChatId = id;
-  messagesDiv.innerHTML = '';
-  messages.forEach(msg => appendMessage(msg.role, msg.text));
-}
-
-// Generate chat summaries for sidebar
-function updateSidebar() {
+// Load chat history from localStorage
+function loadHistory() {
+  const history = JSON.parse(localStorage.getItem('cutieHistory') || '[]');
   historyList.innerHTML = '';
-  for (let i = 1; i <= chatCounter; i++) {
-    const id = `chat_${i}`;
-    const chatData = localStorage.getItem(id);
-    if (chatData) {
-      const li = document.createElement('li');
-      li.textContent = `Chat ${i}`;
-      li.onclick = () => loadChat(id);
-      historyList.appendChild(li);
-    }
-  }
+  history.forEach((entry, index) => {
+    const li = document.createElement('li');
+    li.textContent = `Chat ${index + 1}`;
+    li.addEventListener('click', () => {
+      messages.innerHTML = entry;
+    });
+    historyList.appendChild(li);
+  });
 }
 
+// Save current chat to history
+function saveHistory() {
+  const history = JSON.parse(localStorage.getItem('cutieHistory') || '[]');
+  history.push(messages.innerHTML);
+  localStorage.setItem('cutieHistory', JSON.stringify(history));
+  loadHistory();
+}
 
+// Add message to chat
+function addMessage(text, sender) {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = sender;
+  msgDiv.textContent = text;
+  messages.appendChild(msgDiv);
+  messages.scrollTop = messages.scrollHeight;
+}
 
-// Toggle sidebar visibility
+// Simulate bot reply
+function getBotReply(userText) {
+  return "Cutie Patootie heard: " + userText;
+}
+
+// Handle chat submission
+chatForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const text = userInput.value.trim();
+  if (!text) return;
+  addMessage(text, 'user');
+  userInput.value = '';
+
+  setTimeout(() => {
+    const reply = getBotReply(text);
+    addMessage(reply, 'bot');
+  }, 600);
+});
+
+// New chat button
+newChatBtn.addEventListener('click', () => {
+  if (messages.innerHTML.trim()) {
+    saveHistory();
+  }
+  messages.innerHTML = '';
+});
+
+// Sidebar toggle
 toggleSidebarBtn.addEventListener('click', () => {
   sidebar.classList.toggle('open');
 });
 
-// New Chat button
-newChatBtn.addEventListener('click', () => {
-  saveCurrentChat();
-  messages = [];
-  currentChatId = null;
-  messagesDiv.innerHTML = '';
-});
-
-// Load summaries on page load
-updateSidebar();
+loadHistory();
