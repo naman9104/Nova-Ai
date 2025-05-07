@@ -71,15 +71,14 @@ function updateSidebar() {
     const id = `chat_${i}`;
     const chatData = localStorage.getItem(id);
     if (chatData) {
-      const chatArr = JSON.parse(chatData);
-      const summary = chatArr.find(m => m.role === 'user')?.text || 'No text';
       const li = document.createElement('li');
-      li.innerHTML = `<strong>Chat ${i}:</strong> ${summary}`;
+      li.textContent = `Chat ${i}`;
       li.onclick = () => loadChat(id);
       historyList.appendChild(li);
     }
   }
 }
+
 
 
 // Toggle sidebar visibility
