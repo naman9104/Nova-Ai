@@ -67,19 +67,20 @@ function loadChat(id) {
 // Generate chat summaries for sidebar
 function updateSidebar() {
   historyList.innerHTML = '';
-  for (let i = chatCounter; i >= 1; i--) {
+  for (let i = 1; i <= chatCounter; i++) {
     const id = `chat_${i}`;
     const chatData = localStorage.getItem(id);
     if (chatData) {
       const chatArr = JSON.parse(chatData);
       const summary = chatArr.find(m => m.role === 'user')?.text || 'No text';
       const li = document.createElement('li');
-      li.innerHTML = `💌 <strong></strong> ${summary}`;
+      li.innerHTML = `<strong>Chat ${i}:</strong> ${summary}`;
       li.onclick = () => loadChat(id);
       historyList.appendChild(li);
     }
   }
 }
+
 
 // Toggle sidebar visibility
 toggleSidebarBtn.addEventListener('click', () => {
