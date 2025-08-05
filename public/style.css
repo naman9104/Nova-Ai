@@ -1,0 +1,223 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Comic Sans MS", cursive, sans-serif;
+  word-break: break-word;
+}
+
+body {
+  background: linear-gradient(135deg, #000000, #264b57, #0a043d);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+#chatbot {
+  display: flex;
+  flex-direction: column;
+  background: rgb(0, 0, 0);
+  width: 400px;
+  max-height: 90vh;
+  border-radius: 20px;
+  box-shadow: 0 0 25px rgb(60, 4, 150);
+  overflow: hidden;
+  z-index: 1;
+}
+
+#bot-face {
+  background: #00b7ff;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  aspect-ratio: 1 / 1; /* Keeps face square */
+}
+
+.eye {
+  width: 20px;
+  height: 20px;
+  background: #000;
+  margin: 0 10px;
+  border-radius: 4px;
+}
+
+.mouth {
+  width: 50px;
+  height: 8px;
+  background: #000;
+  position: absolute;
+  bottom: 25px;
+  border-radius: 4px;
+}
+
+#chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  overflow-y: auto;
+}
+
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+#messages div {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  max-width: 80%;
+  word-break: break-word;
+}
+
+.user {
+  background-color: #a8f9ff;
+  align-self: flex-end;
+}
+
+.bot {
+  background-color: #8678ff;
+  align-self: flex-start;
+}
+
+#chat-form {
+  display: flex;
+  gap: 10px;
+}
+
+#user-input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 2px solid #ddd;
+  outline: none;
+}
+
+button {
+  width: 80px;
+  background: #000000;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  transition-duration: 0.3s;
+  background: #4714ff;
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  left: -260px;
+  top: 0;
+  height: 100%;
+  width: 250px;
+  background: #1b1b2f;
+  color: white;
+  padding: 20px;
+  overflow-y: auto;
+  transition: left 0.3s;
+  z-index: 999;
+  border-right: 2px solid #8569ff;
+}
+
+.sidebar.open {
+  left: 0;
+}
+
+.sidebar h2 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #7869ff;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  background: #29294d;
+  padding: 10px;
+  margin: 10px 0;
+  border-left: 4px solid #8569ff;
+  font-size: 14px;
+  border-radius: 5px;
+}
+
+/* Stylish Ribbon Button */
+#toggleSidebarBtn {
+  position: fixed;
+  top: 20px;
+  left: 10px;
+  z-index: 1000;
+  background: linear-gradient(145deg, #0011ff, #0252ff);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 50% 50% 50% 50%;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 0 15px #696cff;
+  animation: bounce 1.2s infinite;
+  transition: transform 0.2s;
+}
+
+#toggleSidebarBtn:hover {
+  transform: scale(1.1);
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+/* ========== Custom Scrollbar ========== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111827; /* dark background */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #7869ff; /* violet-ish */
+  border-radius: 10px;
+  border: 2px solid #1b1b2f;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9c8fff; /* lighter on hover */
+}
+/* Message animation */
+@keyframes slideIn {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+}
+
+.bot,
+.user {
+  animation: slideIn 0.3s ease forwards;
+}

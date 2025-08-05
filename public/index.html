@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cutie Patootie 💖</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="chatbot">
+    <div id="bot-face">
+      <div class="eye left-eye"></div>
+      <div class="eye right-eye"></div>
+      <div class="mouth"></div>
+    </div>
+    <div id="chat-container">
+      <div id="messages"></div>
+      <form id="chat-form">
+        <input type="text" id="user-input" placeholder="Talk to Cutie Patootie..." autocomplete="off" />
+        <button type="submit">Send</button>
+        <button type="button" id="new-chat">New Chat</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="chatHistorySidebar">
+    <h2>📙 Old Chats</h2>
+    <ul id="historyList"></ul>
+  </div>
+  <button id="toggleSidebarBtn">📙</button>
+
+  <script src="script.js"></script>
+</body>
+</html>
