@@ -1,3 +1,4 @@
+// Chatbot logic
 const chatForm = document.getElementById('chat-form');
 const userInput = document.getElementById('user-input');
 const messagesDiv = document.getElementById('messages');
@@ -14,7 +15,7 @@ if (!sessionId) {
   sessionId = 'session-' + Math.random().toString(36).substr(2, 9);
   localStorage.setItem('mathsNerdSessionId', sessionId);
 }
-// Submit form handler
+
 chatForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const message = userInput.value.trim();
@@ -26,13 +27,11 @@ chatForm.addEventListener('submit', async (e) => {
 
   try {
     const res = await fetch('/chat', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    message,
-    sessionId // ← now sending it to server
-  }),
-});
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, sessionId }),
+    });
+
     const data = await res.json();
     appendMessage('bot', data.reply);
     messages.push({ role: 'bot', text: data.reply });
@@ -43,7 +42,6 @@ chatForm.addEventListener('submit', async (e) => {
   }
 });
 
-// Append message to DOM
 function appendMessage(sender, text) {
   const div = document.createElement('div');
   div.className = sender;
@@ -52,7 +50,6 @@ function appendMessage(sender, text) {
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
-// Save current chat to localStorage
 function saveCurrentChat() {
   if (messages.length === 0) return;
   const id = currentChatId || `chat_${++chatCounter}`;
@@ -61,7 +58,6 @@ function saveCurrentChat() {
   currentChatId = id;
 }
 
-// Load chat into view
 function loadChat(id) {
   const stored = localStorage.getItem(id);
   if (!stored) return;
@@ -71,7 +67,6 @@ function loadChat(id) {
   messages.forEach(msg => appendMessage(msg.role, msg.text));
 }
 
-// Generate chat summaries for sidebar
 function updateSidebar() {
   historyList.innerHTML = '';
   for (let i = chatCounter; i >= 1; i--) {
@@ -88,12 +83,10 @@ function updateSidebar() {
   }
 }
 
-// Toggle sidebar visibility
 toggleSidebarBtn.addEventListener('click', () => {
   sidebar.classList.toggle('open');
 });
 
-// New Chat button
 newChatBtn.addEventListener('click', () => {
   saveCurrentChat();
   messages = [];
@@ -101,5 +94,31 @@ newChatBtn.addEventListener('click', () => {
   messagesDiv.innerHTML = '';
 });
 
-// Load summaries on page load
 updateSidebar();
+
+// 👀 Eye tracking using mouse only
+const leftEye = document.querySelector('.left-eye');
+const rightEye = document.querySelector('.right-eye');
+
+document.addEventListener('mousemove', (e) => {
+  moveEyes(e.clientX, e.clientY);
+});
+
+function moveEyes(x, y) {
+  [leftEye, rightEye].forEach((eye) => {
+    const rect = eye.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 90;
+    const centerY = rect.top + rect.height / 90;
+
+    const deltaX = x - centerX;
+    const deltaY = y - centerY;
+
+    const angle = Math.atan2(deltaY, deltaX);
+    const distance = Math.min(rect.width / 2, Math.hypot(deltaX, deltaY) / 2);
+
+    const moveX = Math.cos(angle) * distance;
+    const moveY = Math.sin(angle) * distance;
+
+    eye.style.transform = `translate(${moveX}px, ${moveY}px)`;
+  });
+}
