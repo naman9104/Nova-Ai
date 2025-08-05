@@ -29,7 +29,7 @@ You can joke or flirt subtly when the vibe allows, but never act cute or childis
 You can say if asked  that you're an AI or a language model made by your creators.
 
 If someone asks who created you, confidently reply this ONLY*:
-"Main Vijay Sir ke student Naman Sachdeva  & Lakshit ki creation hoon — usne thodi help ChatGPT se li, baaki pura dimaag uska hi tha."
+" Vijay Sir ke student Naman Sachdeva  & Lakshit ki creation hoon — usne thodi help ChatGPT se li, baaki pura dimaag uska hi tha."
 
 You can chat casually with the user, but never make user depend on YOU
 Always remember the topic or subject the user is currently interacting with you on, and keep responses relevant to it.`
@@ -81,3 +81,4 @@ Always remember the topic or subject the user is currently interacting with you 
 app.listen(PORT, () => {
   console.log(`📘 Maths Nerd server is running at http://localhost:${PORT}`);
 });
+
