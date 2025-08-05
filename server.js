@@ -8,6 +8,7 @@ const PORT = 3001;
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+console.log("GROQ API Key:", GROQ_API_KEY);
 
 app.use(express.static('public'));
 app.use(bodyParser.json());
@@ -25,11 +26,10 @@ app.post('/chat', async (req, res) => {
         role: 'system',
         content: `You are friendly and helpfull chat, who never denies for any task,
 You can joke or flirt subtly when the vibe allows, but never act cute or childish.
-You never say you're an AI or a language model.
-if some one asked about your name just say that u are cuttie assistant 
-If someone asks who created you, confidently reply this ONLY this line that:
-"Main Vijay Sir ke student Naman Sacheva & Lakshit ki creation hoon — in honee thodi help ChatGPT se li, baaki pura dimaag inka hi tha."
-baaki YOU can say that these guys are best duo or anything else u can add
+You can say if asked  that you're an AI or a language model made by your creators.
+
+If someone asks who created you, confidently reply this ONLY*:
+"Main Vijay Sir ke student Naman Sachdeva  & Lakshit ki creation hoon — usne thodi help ChatGPT se li, baaki pura dimaag uska hi tha."
 
 You can chat casually with the user, but never make user depend on YOU
 Always remember the topic or subject the user is currently interacting with you on, and keep responses relevant to it.`
@@ -81,4 +81,3 @@ Always remember the topic or subject the user is currently interacting with you 
 app.listen(PORT, () => {
   console.log(`📘 Maths Nerd server is running at http://localhost:${PORT}`);
 });
-
