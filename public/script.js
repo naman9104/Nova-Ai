@@ -107,8 +107,8 @@ document.addEventListener('mousemove', (e) => {
 function moveEyes(x, y) {
   [leftEye, rightEye].forEach((eye) => {
     const rect = eye.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 90;
-    const centerY = rect.top + rect.height / 90;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
 
     const deltaX = x - centerX;
     const deltaY = y - centerY;
@@ -122,3 +122,4 @@ function moveEyes(x, y) {
     eye.style.transform = `translate(${moveX}px, ${moveY}px)`;
   });
 }
+
