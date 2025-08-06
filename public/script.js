@@ -1,125 +1,102 @@
-// Chatbot logic
 const chatForm = document.getElementById('chat-form');
 const userInput = document.getElementById('user-input');
-const messagesDiv = document.getElementById('messages');
-const historyList = document.getElementById('historyList');
+const messages = document.getElementById('messages');
+const newChatBtn = document.getElementById('new-chat');
 const sidebar = document.getElementById('chatHistorySidebar');
 const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
-const newChatBtn = document.getElementById('new-chat');
+const historyList = document.getElementById('historyList');
+const botFace = document.getElementById('bot-face');
+const leftEye = document.querySelector('.left-eye');
+const rightEye = document.querySelector('.right-eye');
 
-let chatCounter = localStorage.getItem('chatCounter') || 0;
-let currentChatId = null;
-let messages = [];
-let sessionId = localStorage.getItem('mathsNerdSessionId');
-if (!sessionId) {
-  sessionId = 'session-' + Math.random().toString(36).substr(2, 9);
-  localStorage.setItem('mathsNerdSessionId', sessionId);
+// Eye follow cursor
+document.addEventListener('mousemove', (event) => {
+  const faceRect = botFace.getBoundingClientRect();
+  const centerX = faceRect.left + faceRect.width / 2;
+  const centerY = faceRect.top + faceRect.height / 2;
+
+  const deltaX = event.clientX - centerX;
+  const deltaY = event.clientY - centerY;
+
+  const maxMove = 15;
+  const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+  const scale = Math.min(maxMove / distance, 1);
+
+  const moveX = deltaX * scale;
+  const moveY = deltaY * scale;
+
+  leftEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
+  rightEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
+});
+
+// Load chat history
+function loadHistory() {
+  const history = JSON.parse(localStorage.getItem('cutieHistory') || '[]');
+  historyList.innerHTML = '';
+  history.forEach((entry, index) => {
+    const li = document.createElement('li');
+    li.textContent = `Chat ${index + 1}`;
+    li.addEventListener('click', () => {
+      messages.innerHTML = entry;
+    });
+    historyList.appendChild(li);
+  });
 }
 
+// Save chat
+function saveHistory() {
+  const history = JSON.parse(localStorage.getItem('cutieHistory') || '[]');
+  history.push(messages.innerHTML);
+  localStorage.setItem('cutieHistory', JSON.stringify(history));
+  loadHistory();
+}
+
+// Add message
+function addMessage(text, sender) {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = sender;
+  msgDiv.textContent = text;
+  messages.appendChild(msgDiv);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// Handle chat submit
 chatForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const message = userInput.value.trim();
-  if (!message) return;
+  const text = userInput.value.trim();
+  if (!text) return;
 
-  appendMessage('user', message);
-  messages.push({ role: 'user', text: message });
+  addMessage(text, 'user');
   userInput.value = '';
 
   try {
     const res = await fetch('/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, sessionId }),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: text })
     });
 
     const data = await res.json();
-    appendMessage('bot', data.reply);
-    messages.push({ role: 'bot', text: data.reply });
-    saveCurrentChat();
-    updateSidebar();
-  } catch (err) {
-    appendMessage('bot', 'Oops! Something went wrong.');
+    addMessage(data.reply, 'bot');
+  } catch (error) {
+    addMessage("❌ Cutie got an error! Try again later.", 'bot');
+    console.error('Error:', error);
   }
 });
 
-function appendMessage(sender, text) {
-  const div = document.createElement('div');
-  div.className = sender;
-  div.innerText = text;
-  messagesDiv.appendChild(div);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
-
-function saveCurrentChat() {
-  if (messages.length === 0) return;
-  const id = currentChatId || `chat_${++chatCounter}`;
-  localStorage.setItem(id, JSON.stringify(messages));
-  localStorage.setItem('chatCounter', chatCounter);
-  currentChatId = id;
-}
-
-function loadChat(id) {
-  const stored = localStorage.getItem(id);
-  if (!stored) return;
-  messages = JSON.parse(stored);
-  currentChatId = id;
-  messagesDiv.innerHTML = '';
-  messages.forEach(msg => appendMessage(msg.role, msg.text));
-}
-
-function updateSidebar() {
-  historyList.innerHTML = '';
-  for (let i = chatCounter; i >= 1; i--) {
-    const id = `chat_${i}`;
-    const chatData = localStorage.getItem(id);
-    if (chatData) {
-      const chatArr = JSON.parse(chatData);
-      const summary = chatArr.find(m => m.role === 'user')?.text || 'No text';
-      const li = document.createElement('li');
-      li.innerHTML = `📚 <strong></strong> ${summary}`;
-      li.onclick = () => loadChat(id);
-      historyList.appendChild(li);
-    }
+// New chat
+newChatBtn.addEventListener('click', () => {
+  if (messages.innerHTML.trim()) {
+    saveHistory();
   }
-}
+  messages.innerHTML = '';
+});
 
+// Sidebar toggle
 toggleSidebarBtn.addEventListener('click', () => {
   sidebar.classList.toggle('open');
 });
 
-newChatBtn.addEventListener('click', () => {
-  saveCurrentChat();
-  messages = [];
-  currentChatId = null;
-  messagesDiv.innerHTML = '';
-});
-
-updateSidebar();
-
-// 👀 Eye tracking using mouse only
-const leftEye = document.querySelector('.left-eye');
-const rightEye = document.querySelector('.right-eye');
-
-document.addEventListener('mousemove', (e) => {
-  moveEyes(e.clientX, e.clientY);
-});
-
-function moveEyes(x, y) {
-  [leftEye, rightEye].forEach((eye) => {
-    const rect = eye.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    const deltaX = x - centerX;
-    const deltaY = y - centerY;
-
-    const angle = Math.atan2(deltaY, deltaX);
-    const distance = Math.min(rect.width / 2, Math.hypot(deltaX, deltaY) / 2);
-
-    const moveX = Math.cos(angle) * distance;
-    const moveY = Math.sin(angle) * distance;
-
-    eye.style.transform = `translate(${moveX}px, ${moveY}px)`;
-  });
-}
-
+loadHistory();
