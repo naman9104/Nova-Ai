@@ -56,7 +56,7 @@ chatForm.addEventListener('submit', async (e) => {
     // Show loader
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'bot';
-    loadingDiv.textContent = 'Cutie is typing...';
+    loadingDiv.textContent = 'Nova is typing...';
     messagesDiv.appendChild(loadingDiv);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
@@ -156,3 +156,4 @@ document.addEventListener('mousemove', (event) => {
   leftEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
   rightEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
 });
+
