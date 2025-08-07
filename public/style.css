@@ -110,6 +110,7 @@ button {
   border-radius: 10px;
   cursor: pointer;
   font-weight: bold;
+  white-space: nowrap; /* Prevent vertical text */
 }
 
 button:hover {
@@ -223,6 +224,7 @@ button:hover {
 .user {
   animation: slideIn 0.3s ease forwards;
 }
+
 
 
 
