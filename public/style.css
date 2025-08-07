@@ -88,7 +88,9 @@ body {
 
 #chat-form {
   display: flex;
+  flex-direction: row;
   gap: 10px;
+  align-items: center;
 }
 
 #user-input {
@@ -221,5 +223,6 @@ button:hover {
 .user {
   animation: slideIn 0.3s ease forwards;
 }
+
 
 
