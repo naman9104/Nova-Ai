@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Nova</title>
+  <title>NOVA</title>
   <link rel="stylesheet" href="style.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 </head>
 <body>
   <div id="chatbot">
@@ -13,11 +14,13 @@
       <div class="eye right-eye"></div>
       <div class="mouth"></div>
     </div>
+
     <div id="chat-container">
       <div id="messages"></div>
       <form id="chat-form">
-        <input type="text" id="user-input" placeholder="Talk to Nova..." autocomplete="off" />
-        <button type="submit">Send</button>
+        <input type="text" id="user-input" placeholder="Talk to NOVA..." autocomplete="off" />
+         <button type="button" id="mic-btn">🎤</button>
+        <button id="sendBtn" class="send-button">Send</button>
         <button type="button" id="new-chat">New Chat</button>
       </form>
     </div>
@@ -30,8 +33,11 @@
   </div>
   <button id="toggleSidebarBtn">📙</button>
 
-  <script src="script.js"></script>
+  <!-- visible webcam -->
+  <video id="inputVideo" autoplay muted playsinline
+         style="width:320px; height:240px; border:2px solid #00ffcc; border-radius:8px; position: fixed; right: 20px; bottom: 20px; z-index: 999;">
+  </video>
+
+  <script defer src="script.js"></script>
 </body>
 </html>
-
-
