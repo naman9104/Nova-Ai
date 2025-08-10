@@ -1,8 +1,8 @@
-* {
+* {* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Comic Sans MS", sans-serif;
+  font-family: "Comic Sans MS", cursive, sans-serif;
   word-break: break-word;
 }
 
@@ -34,7 +34,7 @@ body {
   justify-content: center;
   align-items: center;
   position: relative;
-  aspect-ratio: 1 / 1; /* Keeps face square */
+  aspect-ratio: 1 / 1;
 }
 
 .eye {
@@ -43,6 +43,20 @@ body {
   background: #000;
   margin: 0 10px;
   border-radius: 4px;
+  transition: transform 0.12s ease-out;
+}
+.send-button {
+    background-color: #000000;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.send-button:hover {
+    background-color: #3b9ed9;
 }
 
 .mouth {
@@ -88,16 +102,14 @@ body {
 
 #chat-form {
   display: flex;
-  flex-direction: row;
   gap: 10px;
-  align-items: center;
 }
 
 #user-input {
   flex: 1;
   padding: 10px;
   border-radius: 10px;
-  border: 2px solid #ddd;
+  border: 2px solid #000000;
   outline: none;
 }
 
@@ -106,16 +118,22 @@ button {
   background: #000000;
   color: white;
   border: none;
+  white-space: nowrap;
   padding: 10px 15px;
   border-radius: 10px;
   cursor: pointer;
   font-weight: bold;
-  white-space: nowrap; /* Prevent vertical text */
 }
 
 button:hover {
   transition-duration: 0.3s;
   background: #4714ff;
+}
+#mic-btn, #send-btn {
+  white-space: nowrap;
+  padding: 8px 12px;
+  width: auto;
+  text-align: center;
 }
 
 /* Sidebar */
@@ -158,7 +176,6 @@ button:hover {
   border-radius: 5px;
 }
 
-/* Stylish Ribbon Button */
 #toggleSidebarBtn {
   position: fixed;
   top: 20px;
@@ -168,7 +185,7 @@ button:hover {
   color: white;
   border: none;
   padding: 10px 16px;
-  border-radius: 50% 50% 50% 50%;
+  border-radius: 50%;
   font-size: 18px;
   cursor: pointer;
   box-shadow: 0 0 15px #696cff;
@@ -188,26 +205,28 @@ button:hover {
     transform: translateY(-4px);
   }
 }
-/* ========== Custom Scrollbar ========== */
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #111827; /* dark background */
+  background: #1f60eb;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #7869ff; /* violet-ish */
+  background: #523fff;
   border-radius: 10px;
   border: 2px solid #1b1b2f;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9c8fff; /* lighter on hover */
+  background: #7361ff;
 }
+
 /* Message animation */
 @keyframes slideIn {
   0% {
@@ -224,7 +243,5 @@ button:hover {
 .user {
   animation: slideIn 0.3s ease forwards;
 }
-
-
 
 
