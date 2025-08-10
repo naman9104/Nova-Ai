@@ -1,5 +1,9 @@
+// Chatbot logic// One-time nova activation flag: when true, next bot reply will be typed+spoken once
+let novaOneTime = false;
+
 // Chatbot logic
 const chatForm = document.getElementById('chat-form');
+const micBtn = document.getElementById('mic-btn');
 const userInput = document.getElementById('user-input');
 const messagesDiv = document.getElementById('messages');
 const historyList = document.getElementById('historyList');
@@ -16,7 +20,55 @@ if (!sessionId) {
   localStorage.setItem('mathsNerdSessionId', sessionId);
 }
 
-// Typing effect message appender
+let recognition;
+let recognizing = false;
+
+// Setup Speech Recognition (one-shot, on mic button click)
+if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onstart = () => {
+    recognizing = true;
+    micBtn.classList.add('listening');
+  };
+
+  recognition.onend = () => {
+    recognizing = false;
+    micBtn.classList.remove('listening');
+  };
+
+  recognition.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+    recognizing = false;
+    micBtn.classList.remove('listening');
+  };
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript.trim();
+    console.log('Recognized:', transcript);
+    userInput.value = transcript;
+    userInput.focus();
+  };
+} else {
+  micBtn.style.display = 'none'; // Hide mic button if not supported
+}
+
+// Mic button click toggles recognition (one-shot)
+micBtn.addEventListener('click', () => {
+  if (recognizing) {
+    recognition.stop();
+    recognizing = false;
+    micBtn.classList.remove('listening');
+  } else {
+    recognition.start();
+  }
+});
+
+// Append message with typewriter and TTS if novaOneTime
 function appendMessage(sender, text) {
   const msgDiv = document.createElement('div');
   msgDiv.className = sender;
@@ -24,42 +76,79 @@ function appendMessage(sender, text) {
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
   if (sender === 'bot') {
-    let i = 0;
-    const speed = 20;
-
-    function typeWriter() {
-      if (i < text.length) {
-        msgDiv.textContent += text.charAt(i);
-        i++;
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        setTimeout(typeWriter, speed);
+    if (novaOneTime) {
+      novaOneTime = false;
+      let i = 0;
+      const speed = 20;
+      function typeWriter() {
+        if (i < text.length) {
+          msgDiv.textContent += text.charAt(i);
+          i++;
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+          setTimeout(typeWriter, speed);
+        } else {
+          speakText(text);
+        }
       }
+      typeWriter();
+    } else {
+      msgDiv.textContent = text;
     }
-
-    typeWriter();
   } else {
     msgDiv.textContent = text;
   }
 }
 
-// Handle form submission
-chatForm.addEventListener('submit', async (e) => {
+// Speak text with male-ish voice if possible
+function speakText(text) {
+  if (!('speechSynthesis' in window)) return;
+  const utterance = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  const preferred = voices.find(v => /male|daniel|george|zira|english/i.test(v.name)) || voices[0];
+  if (preferred) utterance.voice = preferred;
+  utterance.rate = 0.9;
+  utterance.pitch = 0.5;
+  utterance.volume = 1;
+  speechSynthesis.speak(utterance);
+}
+
+// Detect Jarvis activation commands
+function isJarvisCommand(text) {
+  if (!text) return false;
+  const t = text.trim().toLowerCase();
+  return t === 'nova mode' || t === 'nova mode on' || t === 'activate nova' || t === 'activate nova';
+}
+
+// Process user message (typed or from mic)
+function processUserMessage(message) {
+  if (!message) return;
+  appendMessage('user', message);
+  messages.push({ role: 'user', text: message });
+  sendToAPI(message);
+}
+
+// Handle form submit (send typed input)
+chatForm.addEventListener('submit', e => {
   e.preventDefault();
   const message = userInput.value.trim();
   if (!message) return;
-
-  appendMessage('user', message);
-  messages.push({ role: 'user', text: message });
+  processUserMessage(message);
   userInput.value = '';
+});
+
+// Send message to backend and handle reply
+async function sendToAPI(message) {
+  if (isJarvisCommand(message)) {
+    novaOneTime = true;
+  }
+
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'bot';
+  loadingDiv.textContent = 'NOVA is typing...';
+  messagesDiv.appendChild(loadingDiv);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
   try {
-    // Show loader
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'bot';
-    loadingDiv.textContent = 'Nova is typing...';
-    messagesDiv.appendChild(loadingDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
     const res = await fetch('/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -68,7 +157,6 @@ chatForm.addEventListener('submit', async (e) => {
 
     const data = await res.json();
 
-    // Remove loader and show typed message
     setTimeout(() => {
       loadingDiv.remove();
       appendMessage('bot', data.reply);
@@ -76,11 +164,12 @@ chatForm.addEventListener('submit', async (e) => {
       saveCurrentChat();
       updateSidebar();
     }, 600);
-
   } catch (err) {
+    loadingDiv.remove();
     appendMessage('bot', 'Oops! Something went wrong.');
+    console.error(err);
   }
-});
+}
 
 // Save current chat
 function saveCurrentChat() {
@@ -91,17 +180,18 @@ function saveCurrentChat() {
   currentChatId = id;
 }
 
-// Load a specific chat from sidebar
+// Load chat by id from sidebar
 function loadChat(id) {
   const stored = localStorage.getItem(id);
   if (!stored) return;
   messages = JSON.parse(stored);
   currentChatId = id;
   messagesDiv.innerHTML = '';
+  novaOneTime = false;
   messages.forEach(msg => appendMessage(msg.role, msg.text));
 }
 
-// Update sidebar with chat list
+// Update sidebar chat list
 function updateSidebar() {
   historyList.innerHTML = '';
   for (let i = chatCounter; i >= 1; i--) {
@@ -118,27 +208,95 @@ function updateSidebar() {
   }
 }
 
-// Toggle sidebar visibility
+// Toggle sidebar
 toggleSidebarBtn.addEventListener('click', () => {
   sidebar.classList.toggle('open');
 });
 
-// New Chat clears current conversation
+// New chat resets state
 newChatBtn.addEventListener('click', () => {
   saveCurrentChat();
   messages = [];
   currentChatId = null;
   messagesDiv.innerHTML = '';
+  novaOneTime = false;
 });
 
-updateSidebar();
-
-// =================== Eye Follow Effect ===================
+// =============== Eye Follow Effect (face-api) ===============
 const botFace = document.getElementById('bot-face');
-const leftEye = document.querySelector('.eye:nth-child(1)');
-const rightEye = document.querySelector('.eye:nth-child(2)');
+const leftEye = document.querySelector('.eye.left-eye') || document.querySelector('.eye:nth-child(1)');
+const rightEye = document.querySelector('.eye.right-eye') || document.querySelector('.eye:nth-child(2)');
 
-document.addEventListener('mousemove', (event) => {
+let faceTrackingActive = false;
+
+async function setupFaceTracking() {
+  const video = document.getElementById('inputVideo');
+  await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+  await faceapi.nets.faceLandmark68TinyNet.loadFromUri('/models');
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+    video.srcObject = stream;
+    video.onloadedmetadata = () => {
+      video.play();
+      faceTrackingActive = true;
+      startFaceTracking();
+    };
+  } catch (err) {
+    console.log('Camera access denied or unavailable — using mouse fallback.');
+    faceTrackingActive = false;
+  }
+
+  function startFaceTracking() {
+    const faceOptions = new faceapi.TinyFaceDetectorOptions();
+
+    async function onPlay() {
+      if (video.paused || video.ended) return setTimeout(onPlay, 200);
+
+      const result = await faceapi.detectSingleFace(video, faceOptions).withFaceLandmarks(true);
+
+      if (result && result.landmarks) {
+        const landmarks = result.landmarks;
+        const leftEyePts = landmarks.getLeftEye();
+        const rightEyePts = landmarks.getRightEye();
+
+        const avgPoint = (pts) => pts.reduce((acc, pt) => ({ x: acc.x + pt.x, y: acc.y + pt.y }), { x: 0, y: 0 });
+
+        const leftEyeCenter = avgPoint(leftEyePts);
+        leftEyeCenter.x /= leftEyePts.length;
+        leftEyeCenter.y /= leftEyePts.length;
+
+        const rightEyeCenter = avgPoint(rightEyePts);
+        rightEyeCenter.x /= rightEyePts.length;
+        rightEyeCenter.y /= rightEyePts.length;
+
+        const faceCenterX = (leftEyeCenter.x + rightEyeCenter.x) / 2;
+        const faceCenterY = (leftEyeCenter.y + rightEyeCenter.y) / 2;
+
+        const normX = faceCenterX / video.videoWidth;
+        const normY = faceCenterY / video.videoHeight;
+
+        const maxMove = 30;
+        const moveX = (normX - 0.5) * 2 * maxMove;
+        const moveY = (normY - 0.5) * 2 * maxMove;
+
+        leftEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        rightEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
+      } else {
+        leftEye.style.transform = `translate(0, 0)`;
+        rightEye.style.transform = `translate(0, 0)`;
+      }
+
+      setTimeout(onPlay, 200);
+    }
+    onPlay();
+  }
+}
+
+// Fallback mouse tracking when no face tracking
+document.addEventListener('mousemove', event => {
+  if (faceTrackingActive) return;
+
   const faceRect = botFace.getBoundingClientRect();
   const centerX = faceRect.left + faceRect.width / 2;
   const centerY = faceRect.top + faceRect.height / 2;
@@ -146,9 +304,9 @@ document.addEventListener('mousemove', (event) => {
   const deltaX = event.clientX - centerX;
   const deltaY = event.clientY - centerY;
 
-  const maxMove = 15;
+  const maxMove = 20;
   const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
-  const scale = Math.min(maxMove / distance, 1);
+  const scale = Math.min(maxMove / Math.max(distance, 1), 1);
 
   const moveX = deltaX * scale;
   const moveY = deltaY * scale;
@@ -156,4 +314,8 @@ document.addEventListener('mousemove', (event) => {
   leftEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
   rightEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
 });
+
+// Start face tracking
+setupFaceTracking();
+
 
