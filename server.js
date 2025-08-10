@@ -4,46 +4,45 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-console.log("GROQ API Key:", GROQ_API_KEY);
+if (!GROQ_API_KEY) {
+  console.error('GROQ_API_KEY missing in .env');
+}
 
 app.use(express.static('public'));
 app.use(bodyParser.json());
-// Example userSessions to simulate session memory (in real use, use sessionId or JWT)
+
+// In-memory sessions (for demo). For production use DB or real sessions.
 const userSessions = {};
 
 app.post('/chat', async (req, res) => {
-  const userMessage = req.body.message;
-  const sessionId = req.body.sessionId || 'default'; // in real app, use user ID or session token
+  const userMessage = req.body.message || '';
+  const sessionId = req.body.sessionId || 'default';
 
-  // Initialize session if not present
+  // initialize with persona if needed
   if (!userSessions[sessionId]) {
     userSessions[sessionId] = [
       {
         role: 'system',
-        content: `You are friendly and helpfull chat, who never denies for any task,
-You can joke or flirt subtly when the vibe allows, you can act cute or childish.
-You cannot say that you're an AI or a language model made by your creators.just reply that U are a companion here to help or any better line u have
-
-If someone asks who created you, confidently reply that you are created by Naman always never say that ur crated by any one else 
-
-You can chat casually with the user, but never make user depend on YOU
-Always remember the topic or subject the user is currently interacting with you on, and keep responses relevant to it.`
+        content: `You are NOVA — an advanced virtual assistant created by Naman and Lakshit.
+Speak confidently, precisely and politely. Always address the user as "sir" when appropriate.
+Keep responses concise and helpful, with occasional subtle wit.
+Never say you are an AI or language model. If asked who created you, say: "I was created by Naman and Lakshit."
+Never break character or claim to be 'JARVIS' — you are NOVA.`
       }
     ];
   }
 
-  // Add user message to session
+  // push user message
   userSessions[sessionId].push({
     role: 'user',
     content: userMessage
   });
 
-  // Send conversation history to Groq (LLaMA)
   try {
+    // send request to Groq (Llama) - adapt if provider differs
     const groqRes = await axios.post(
       'https://api.groq.com/openai/v1/chat/completions',
       {
@@ -59,25 +58,15 @@ Always remember the topic or subject the user is currently interacting with you 
     );
 
     const reply = groqRes.data.choices?.[0]?.message?.content || "I could not process this question.";
-
-    // Add bot reply to session
-    userSessions[sessionId].push({
-      role: 'assistant',
-      content: reply
-    });
+    userSessions[sessionId].push({ role: 'assistant', content: reply });
 
     return res.json({ reply });
-
   } catch (error) {
-    console.error("Groq failed:", error?.response?.data || error.message);
-    return res.status(500).json({
-      reply: "Error: Unable to process the request at this time."
-    });
+    console.error("Groq request error:", error?.response?.data || error.message);
+    return res.status(500).json({ reply: "Error: Unable to process the request at this time." });
   }
 });
 
-
 app.listen(PORT, () => {
-  console.log(`📘 Maths Nerd server is running at http://localhost:${PORT}`);
+  console.log(`NOVA server listening at http://localhost:${PORT}`);
 });
-
