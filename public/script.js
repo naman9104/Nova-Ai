@@ -1,5 +1,5 @@
-// Chatbot logic// One-time nova activation flag: when true, next bot reply will be typed+spoken once
-let novaOneTime = false;
+// One-time nova activation flag: when true, next bot reply will be typed+spoken once
+let novaOneTime = true; // default ON for a fresh page load/new chat
 
 // Chatbot logic
 const chatForm = document.getElementById('chat-form');
@@ -51,7 +51,7 @@ if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
     const transcript = event.results[0][0].transcript.trim();
     console.log('Recognized:', transcript);
     userInput.value = transcript;
-    userInput.focus();
+    processUserMessage(transcript); // auto-send mic input
   };
 } else {
   micBtn.style.display = 'none'; // Hide mic button if not supported
@@ -61,8 +61,6 @@ if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
 micBtn.addEventListener('click', () => {
   if (recognizing) {
     recognition.stop();
-    recognizing = false;
-    micBtn.classList.remove('listening');
   } else {
     recognition.start();
   }
@@ -77,7 +75,7 @@ function appendMessage(sender, text) {
 
   if (sender === 'bot') {
     if (novaOneTime) {
-      novaOneTime = false;
+      novaOneTime = false; // turn OFF after first use
       let i = 0;
       const speed = 20;
       function typeWriter() {
@@ -99,25 +97,6 @@ function appendMessage(sender, text) {
   }
 }
 
-// Speak text with male-ish voice if possible
-function speakText(text) {
-  if (!('speechSynthesis' in window)) return;
-  const utterance = new SpeechSynthesisUtterance(text);
-  const voices = speechSynthesis.getVoices();
-  const preferred = voices.find(v => /male|daniel|george|zira|english/i.test(v.name)) || voices[0];
-  if (preferred) utterance.voice = preferred;
-  utterance.rate = 0.9;
-  utterance.pitch = 0.5;
-  utterance.volume = 1;
-  speechSynthesis.speak(utterance);
-}
-
-// Detect Jarvis activation commands
-function isJarvisCommand(text) {
-  if (!text) return false;
-  const t = text.trim().toLowerCase();
-  return t === 'nova mode' || t === 'nova mode on' || t === 'activate nova' || t === 'activate nova';
-}
 
 // Process user message (typed or from mic)
 function processUserMessage(message) {
@@ -138,10 +117,6 @@ chatForm.addEventListener('submit', e => {
 
 // Send message to backend and handle reply
 async function sendToAPI(message) {
-  if (isJarvisCommand(message)) {
-    novaOneTime = true;
-  }
-
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'bot';
   loadingDiv.textContent = 'NOVA is typing...';
@@ -187,7 +162,7 @@ function loadChat(id) {
   messages = JSON.parse(stored);
   currentChatId = id;
   messagesDiv.innerHTML = '';
-  novaOneTime = false;
+  novaOneTime = false; // never typewriter for old chats
   messages.forEach(msg => appendMessage(msg.role, msg.text));
 }
 
@@ -219,79 +194,10 @@ newChatBtn.addEventListener('click', () => {
   messages = [];
   currentChatId = null;
   messagesDiv.innerHTML = '';
-  novaOneTime = false;
+  novaOneTime = true; // enable typewriter again for new chat
 });
 
 // =============== Eye Follow Effect (face-api) ===============
-const botFace = document.getElementById('bot-face');
-const leftEye = document.querySelector('.eye.left-eye') || document.querySelector('.eye:nth-child(1)');
-const rightEye = document.querySelector('.eye.right-eye') || document.querySelector('.eye:nth-child(2)');
-
-let faceTrackingActive = false;
-
-async function setupFaceTracking() {
-  const video = document.getElementById('inputVideo');
-  await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
-  await faceapi.nets.faceLandmark68TinyNet.loadFromUri('/models');
-
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
-    video.srcObject = stream;
-    video.onloadedmetadata = () => {
-      video.play();
-      faceTrackingActive = true;
-      startFaceTracking();
-    };
-  } catch (err) {
-    console.log('Camera access denied or unavailable — using mouse fallback.');
-    faceTrackingActive = false;
-  }
-
-  function startFaceTracking() {
-    const faceOptions = new faceapi.TinyFaceDetectorOptions();
-
-    async function onPlay() {
-      if (video.paused || video.ended) return setTimeout(onPlay, 200);
-
-      const result = await faceapi.detectSingleFace(video, faceOptions).withFaceLandmarks(true);
-
-      if (result && result.landmarks) {
-        const landmarks = result.landmarks;
-        const leftEyePts = landmarks.getLeftEye();
-        const rightEyePts = landmarks.getRightEye();
-
-        const avgPoint = (pts) => pts.reduce((acc, pt) => ({ x: acc.x + pt.x, y: acc.y + pt.y }), { x: 0, y: 0 });
-
-        const leftEyeCenter = avgPoint(leftEyePts);
-        leftEyeCenter.x /= leftEyePts.length;
-        leftEyeCenter.y /= leftEyePts.length;
-
-        const rightEyeCenter = avgPoint(rightEyePts);
-        rightEyeCenter.x /= rightEyePts.length;
-        rightEyeCenter.y /= rightEyePts.length;
-
-        const faceCenterX = (leftEyeCenter.x + rightEyeCenter.x) / 2;
-        const faceCenterY = (leftEyeCenter.y + rightEyeCenter.y) / 2;
-
-        const normX = faceCenterX / video.videoWidth;
-        const normY = faceCenterY / video.videoHeight;
-
-        const maxMove = 30;
-        const moveX = (normX - 0.5) * 2 * maxMove;
-        const moveY = (normY - 0.5) * 2 * maxMove;
-
-        leftEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
-        rightEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
-      } else {
-        leftEye.style.transform = `translate(0, 0)`;
-        rightEye.style.transform = `translate(0, 0)`;
-      }
-
-      setTimeout(onPlay, 200);
-    }
-    onPlay();
-  }
-}
 
 // Fallback mouse tracking when no face tracking
 document.addEventListener('mousemove', event => {
@@ -317,5 +223,4 @@ document.addEventListener('mousemove', event => {
 
 // Start face tracking
 setupFaceTracking();
-
 
