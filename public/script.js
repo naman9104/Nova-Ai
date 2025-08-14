@@ -50,7 +50,7 @@ if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
   recognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript.trim();
     console.log('Recognized:', transcript);
-    userInput.value = transcript;
+   
     processUserMessage(transcript); // auto-send mic input
   };
 } else {
@@ -223,4 +223,5 @@ document.addEventListener('mousemove', event => {
 
 // Start face tracking
 setupFaceTracking();
+
 
