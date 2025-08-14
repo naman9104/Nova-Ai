@@ -201,8 +201,6 @@ newChatBtn.addEventListener('click', () => {
 
 // Fallback mouse tracking when no face tracking
 document.addEventListener('mousemove', event => {
-  if (faceTrackingActive) return;
-
   const faceRect = botFace.getBoundingClientRect();
   const centerX = faceRect.left + faceRect.width / 2;
   const centerY = faceRect.top + faceRect.height / 2;
@@ -210,7 +208,7 @@ document.addEventListener('mousemove', event => {
   const deltaX = event.clientX - centerX;
   const deltaY = event.clientY - centerY;
 
-  const maxMove = 20;
+  const maxMove = 25;
   const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
   const scale = Math.min(maxMove / Math.max(distance, 1), 1);
 
@@ -221,7 +219,5 @@ document.addEventListener('mousemove', event => {
   rightEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
 });
 
-// Start face tracking
-setupFaceTracking();
 
 
