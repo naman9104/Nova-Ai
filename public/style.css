@@ -1,4 +1,4 @@
-* {
+* {* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -129,6 +129,26 @@ button:hover {
   transition-duration: 0.3s;
   background: #4714ff;
 }
+#openFileBtn {
+ 
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;              /* FLEX ENABLE */
+  align-items: center;        /* vertical center */
+  justify-content: center;    /* horizontal center */
+
+  padding: 8px 16px;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap; /* text wrap na ho */
+  transition-duration: 0.3s;
+}
+#openFileBtn:hover{
+  background: #670794;
+}
+
 #mic-btn, #send-btn {
   white-space: nowrap;
   padding: 8px 12px;
@@ -243,3 +263,5 @@ button:hover {
 .user {
   animation: slideIn 0.3s ease forwards;
 }
+
+
