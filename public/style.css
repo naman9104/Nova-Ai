@@ -2,7 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Poppins", "Comic Sans MS",cursive,sans-serif;
+  font-family: "Comic Sans MS", cursive, sans-serif;
   word-break: break-word;
 }
 
@@ -64,7 +64,7 @@ body {
   height: 8px;
   background: #000;
   position: absolute;
-  bottom: 25px;
+  bottom: 15px;
   border-radius: 4px;
 }
 
@@ -243,8 +243,3 @@ button:hover {
 .user {
   animation: slideIn 0.3s ease forwards;
 }
-
-
-
-
-
