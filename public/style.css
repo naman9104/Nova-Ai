@@ -2,7 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Quicksand", "Comic Sans MS", sans-serif;
+  font-family: "Poppins", "Comic Sans MS", sans-serif;
   word-break: break-word;
 }
 
@@ -243,6 +243,7 @@ button:hover {
 .user {
   animation: slideIn 0.3s ease forwards;
 }
+
 
 
 
