@@ -10,6 +10,9 @@ const historyList = document.getElementById('historyList');
 const sidebar = document.getElementById('chatHistorySidebar');
 const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
 const newChatBtn = document.getElementById('new-chat');
+const botFace = document.getElementById('bot-face'); // Ya jo bhi id hai face container ki
+const leftEye = document.getElementById('left-eye');
+const rightEye = document.getElementById('right-eye');
 
 let chatCounter = localStorage.getItem('chatCounter') || 0;
 let currentChatId = null;
@@ -50,7 +53,7 @@ if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
   recognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript.trim();
     console.log('Recognized:', transcript);
-   
+    userInput.value = transcript;
     processUserMessage(transcript); // auto-send mic input
   };
 } else {
@@ -73,9 +76,22 @@ function appendMessage(sender, text) {
   messagesDiv.appendChild(msgDiv);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
+  // Check if text starts with "shayari:"
+  if (sender === 'bot' && text.toLowerCase().startsWith('shayari:')) {
+    const shayariText = text.replace(/^shayari:/i, '').trim();
+    msgDiv.innerHTML = `
+      <div style="padding:10px; border-left:4px solid #ff4081; background:#fff5f8; border-radius:6px; font-style:italic; font-family:'Poppins', sans-serif;">
+        <div style="font-weight:bold; margin-bottom:5px; font-size:1.1em;">✨ Shayari of the Day ✨</div>
+        ${shayariText.split('\n').map(line => `<div>${line}</div>`).join('')}
+        <div style="margin-top:8px; font-size:0.9em; color:#555;">— ✍️ Nova AI</div>
+      </div>
+    `;
+    return;
+  }
+
   if (sender === 'bot') {
     if (novaOneTime) {
-      novaOneTime = false; // turn OFF after first use
+      novaOneTime = false;
       let i = 0;
       const speed = 20;
       function typeWriter() {
@@ -199,7 +215,6 @@ newChatBtn.addEventListener('click', () => {
 
 // =============== Eye Follow Effect (face-api) ===============
 
-// Fallback mouse tracking when no face tracking
 document.addEventListener('mousemove', event => {
   const faceRect = botFace.getBoundingClientRect();
   const centerX = faceRect.left + faceRect.width / 2;
@@ -218,6 +233,3 @@ document.addEventListener('mousemove', event => {
   leftEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
   rightEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
 });
-
-
-
