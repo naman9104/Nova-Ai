@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pixel Serpent</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: black;
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+      background: radial-gradient(circle at center, #111, #000);
+    }
+
+    #hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-family: monospace;
+      color: #0f0;
+      font-size: 18px;
+      text-shadow: 0 0 5px #0f0;
+      z-index: 5;
+      display: none;
+    }
+
+    #pauseBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      z-index: 10;
+      display: none;
+    }
+
+    #pauseBtn::before, #pauseBtn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      width: 8px;
+      height: 100%;
+      background: #0f0;
+      box-shadow: 0 0 8px #0f0;
+      border-radius: 2px;
+    }
+
+    #pauseBtn::before {
+      left: 0;
+    }
+
+    #pauseBtn::after {
+      right: 0;
+    }
+
+    #pauseScreen {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #0f0;
+      font-size: 28px;
+      font-family: monospace;
+      text-align: center;
+      text-shadow: 0 0 10px #0f0;
+      z-index: 50;
+      display: none;
+    }
+
+    #pauseScreen button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #0f0;
+      border: none;
+      font-size: 16px;
+      font-family: monospace;
+      cursor: pointer;
+      border-radius: 5px;
+      box-shadow: 0 0 10px #0f0;
+      margin-right: 10px;
+    }
+
+    #gameOverScreen {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #f00;
+      font-size: 30px;
+      font-family: monospace;
+      text-align: center;
+      text-shadow: 0 0 10px #f00;
+      display: none;
+      z-index: 100;
+    }
+
+    #restartBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #0f0;
+      border: none;
+      font-size: 16px;
+      font-family: monospace;
+      cursor: pointer;
+      border-radius: 5px;
+      box-shadow: 0 0 10px #0f0;
+    }
+
+    .btn {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background: #0f0;
+      opacity: 0.2;
+      border-radius: 10px;
+      box-shadow: 0 0 15px #0f0;
+      z-index: 10;
+      display: none;
+    }
+    .separator {
+      border-left: 2px dotted #0f0;
+      height: 30px;
+      margin-left: 20px;
+      margin-right: 20px;
+    }
+    #up { bottom: 100px; left: 80px; }
+    #down { bottom: 20px; left: 80px; }
+    #left { bottom: 60px; left: 20px; }
+    #right { bottom: 60px; left: 140px; }
+
+    .btn:active {
+      opacity: 0.6;
+    }
+
+    #startScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    #startBtn {
+      color: #0f0;
+      font-family: monospace;
+      font-size: 40px;
+      border: 2px solid #0f0;
+      padding: 10px 30px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-shadow: 0 0 10px #0f0;
+      box-shadow: 0 0 20px #0f0;
+      background: black;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="startScreen">
+    <div id="startBtn">START</div>
+  </div>
+
+  <div id="hud">
+    <span id="score">Score: 0</span>
+    <span id="highScore" style="margin-left:10px;">High Score: 0</span>
+  </div>
+
+  <div id="pauseBtn"></div>
+   <div class="separator"></div>
+  <div id="pauseScreen">
+    PAUSED<br>
+    <button id="resumeBtn">RESUME</button>
+    <button id="restartFromPauseBtn">RESTART</button>
+  </div>
+
+  <div id="gameOverScreen">
+    💀 GAME OVER<br>
+    <button id="restartBtn">RESTART</button>
+  </div>
+
+  <div id="up" class="btn"></div>
+  <div id="down" class="btn"></div>
+  <div id="left" class="btn"></div>
+  <div id="right" class="btn"></div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const box = 20;
+    let snake = [];
+    let direction = "RIGHT";
+    let food;
+    let score = 0;
+    let highScore = localStorage.getItem("highScore") || 0;
+    let gameInterval;
+    let isPaused = false;
+    let gameOver = false;
+
+    function resetGame() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+      snake = [
+        {x: 9 * box, y: 10 * box},
+        {x: 8 * box, y: 10 * box},
+        {x: 7 * box, y: 10 * box},
+        {x: 6 * box, y: 10 * box}
+      ];
+      direction = "RIGHT";
+      score = 0;
+      food = spawnFood();
+      clearInterval(gameInterval);
+      gameInterval = setInterval(draw, 100);
+      gameOver = false;
+
+      document.getElementById("hud").style.display = "block";
+      document.getElementById("pauseBtn").style.display = "block";
+      document.querySelectorAll(".btn").forEach(btn => btn.style.display = "block");
+      document.getElementById("pauseScreen").style.display = "none";
+      document.getElementById("gameOverScreen").style.display = "none";
+    }
+
+    function spawnFood() {
+      return {
+        x: Math.floor(Math.random() * (width / box)) * box,
+        y: Math.floor(Math.random() * (height / box)) * box
+      };
+    }
+
+    function drawBox(x, y, color = "#0f0") {
+      ctx.fillStyle = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 10;
+      ctx.fillRect(x, y, box, box);
+      ctx.shadowBlur = 0;
+    }
+
+    function draw() {
+      if (isPaused || gameOver) return;
+
+      ctx.clearRect(0, 0, width, height);
+
+      for (let i = 0; i < snake.length; i++) {
+        drawBox(snake[i].x, snake[i].y, i === 0 ? "#0f0" : "#070");
+      }
+
+      drawBox(food.x, food.y, "#f00");
+
+      let headX = snake[0].x;
+      let headY = snake[0].y;
+
+      if (direction === "LEFT") headX -= box;
+      if (direction === "UP") headY -= box;
+      if (direction === "RIGHT") headX += box;
+      if (direction === "DOWN") headY += box;
+
+      if (headX < 0 || headX >= width || headY < 0 || headY >= height) return showGameOver();
+
+      for (let i = 1; i < snake.length; i++) {
+        if (snake[i].x === headX && snake[i].y === headY) return showGameOver();
+      }
+
+      if (headX === food.x && headY === food.y) {
+        score++;
+        food = spawnFood();
+      } else {
+        snake.pop();
+      }
+
+      const newHead = {x: headX, y: headY};
+      snake.unshift(newHead);
+
+      document.getElementById("score").textContent = "Score: " + score;
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("highScore", score);
+      }
+      document.getElementById("highScore").textContent = "High Score: " + highScore;
+    }
+
+    function showGameOver() {
+      clearInterval(gameInterval);
+      gameOver = true;
+      document.getElementById("gameOverScreen").style.display = "block";
+    }
+
+    document.getElementById("restartBtn").onclick = resetGame;
+    document.getElementById("restartFromPauseBtn").onclick = resetGame;
+    document.getElementById("resumeBtn").onclick = () => {
+      isPaused = false;
+      document.getElementById("pauseScreen").style.display = "none";
+    };
+
+    document.getElementById("pauseBtn").onclick = () => {
+      isPaused = !isPaused;
+      document.getElementById("pauseScreen").style.display = isPaused ? "block" : "none";
+    };
+
+    document.getElementById("startBtn").onclick = () => {
+      document.getElementById("startScreen").style.display = "none";
+      resetGame();
+    };
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+      else if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+      else if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+      else if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+    });
+
+    const btns = ["up", "down", "left", "right"];
+    btns.forEach(id => {
+      const dir = id.toUpperCase();
+      const opp = {UP: "DOWN", DOWN: "UP", LEFT: "RIGHT", RIGHT: "LEFT"};
+      const el = document.getElementById(id);
+      const setDir = () => { if (direction !== opp[dir]) direction = dir; };
+      el.addEventListener("click", setDir);
+      el.addEventListener("touchstart", setDir);
+    });
+
+    // Swipe Control
+    let startX, startY;
+    document.addEventListener("touchstart", e => {
+      const t = e.touches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+    });
+
+    document.addEventListener("touchmove", e => {
+      if (!startX || !startY) return;
+      const t = e.touches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 20 && direction !== "LEFT") direction = "RIGHT";
+        else if (dx < -20 && direction !== "RIGHT") direction = "LEFT";
+      } else {
+        if (dy > 20 && direction !== "UP") direction = "DOWN";
+        else if (dy < -20 && direction !== "DOWN") direction = "UP";
+      }
+      startX = startY = null;
+    });
+  </script>
+</body>
+</html>
