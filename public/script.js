@@ -70,24 +70,19 @@ micBtn.addEventListener('click', () => {
 });
 
 // Append message with typewriter and TTS if novaOneTime
+// Append message with typewriter (no TTS)
 function appendMessage(sender, text) {
   const msgDiv = document.createElement('div');
   msgDiv.className = sender;
   messagesDiv.appendChild(msgDiv);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-  // Check if text contains "shayari" anywhere
-if (sender === 'bot' && text.toLowerCase().includes('shayari')) {
-  const shayariText = text.replace(/.*shayari[:]?/i, '').trim();
-  msgDiv.innerHTML = `
-    <div style="padding:10px; border-left:4px solid #ff4081; background:#fff5f8; border-radius:6px; font-style:italic; font-family:'Poppins', sans-serif;">
-      <div style="font-weight:bold; margin-bottom:5px; font-size:1.1em;">✨ Shayari of the Day ✨</div>
-      ${shayariText.split('\n').map(line => `<div>${line}</div>`).join('')}
-      <div style="margin-top:8px; font-size:0.9em; color:#555;">— ✍️ Nova AI</div>
-    </div>
-  `;
-  return;
-}
+ 
+
+
+
+
+  // ✅ Normal bot reply (typewriter effect only first time)
   if (sender === 'bot') {
     if (novaOneTime) {
       novaOneTime = false;
@@ -99,8 +94,6 @@ if (sender === 'bot' && text.toLowerCase().includes('shayari')) {
           i++;
           messagesDiv.scrollTop = messagesDiv.scrollHeight;
           setTimeout(typeWriter, speed);
-        } else {
-          speakText(text);
         }
       }
       typeWriter();
@@ -108,10 +101,10 @@ if (sender === 'bot' && text.toLowerCase().includes('shayari')) {
       msgDiv.textContent = text;
     }
   } else {
+    // ✅ User message direct paste
     msgDiv.textContent = text;
   }
 }
-
 
 // Process user message (typed or from mic)
 function processUserMessage(message) {
@@ -119,7 +112,7 @@ function processUserMessage(message) {
   appendMessage('user', message);
   messages.push({ role: 'user', text: message });
 
-  // 🚀 Agar user bole ya likhe "open the game" / "start game" / "play snake"
+  // 🚀 If user asks for snake game
   const lowerMsg = message.toLowerCase();
   if (lowerMsg.includes("open the game") || 
       lowerMsg.includes("start game") || 
@@ -127,16 +120,16 @@ function processUserMessage(message) {
       
       appendMessage('bot', "🎮 Opening Snake Byte Game for you...");
       setTimeout(() => {
-        window.location.href = "SNAKE BYTE.html"; // <-- apna game file ka naam
+        window.location.href = "SNAKE BYTE.html";
       }, 1200);
-      return; // Stop API call
+      return;
   }
 
   // Normal chat
   sendToAPI(message);
 }
 
-// Handle form submit (send typed input)
+// Handle form submit
 chatForm.addEventListener('submit', e => {
   e.preventDefault();
   const message = userInput.value.trim();
@@ -145,7 +138,7 @@ chatForm.addEventListener('submit', e => {
   userInput.value = '';
 });
 
-// Send message to backend and handle reply
+// ================= HYBRID SEND: Online + Offline fallback =================
 async function sendToAPI(message) {
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'bot';
@@ -154,25 +147,36 @@ async function sendToAPI(message) {
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
   try {
-    const res = await fetch('/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, sessionId }),
-    });
+    const forceOffline = localStorage.getItem('NOVA_FORCE_OFFLINE') === '1';
+    if (!forceOffline && navigator.onLine) {
+      // ---- ONLINE PATH ----
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, sessionId }),
+      });
 
-    const data = await res.json();
+      if (!res.ok) throw new Error('API not OK');
+      const data = await res.json();
 
-    setTimeout(() => {
-      loadingDiv.remove();
-      appendMessage('bot', data.reply);
-      messages.push({ role: 'bot', text: data.reply });
-      saveCurrentChat();
-      updateSidebar();
-    }, 600);
+      setTimeout(() => {
+        loadingDiv.remove();
+        appendMessage('bot', data.reply);
+        messages.push({ role: 'bot', text: data.reply });
+        saveCurrentChat();
+        updateSidebar();
+      }, 600);
+      return;
+    }
+    throw new Error('Go offline');
   } catch (err) {
+    // ---- OFFLINE FALLBACK ----
     loadingDiv.remove();
-    appendMessage('bot', 'Oops! Something went wrong.');
-    console.error(err);
+    const reply = await offlineRespond(message);
+    appendMessage('bot', reply);
+    messages.push({ role: 'bot', text: reply });
+    saveCurrentChat();
+    updateSidebar();
   }
 }
 
@@ -185,18 +189,18 @@ function saveCurrentChat() {
   currentChatId = id;
 }
 
-// Load chat by id from sidebar
+// Load chat
 function loadChat(id) {
   const stored = localStorage.getItem(id);
   if (!stored) return;
   messages = JSON.parse(stored);
   currentChatId = id;
   messagesDiv.innerHTML = '';
-  novaOneTime = false; // never typewriter for old chats
+  novaOneTime = false;
   messages.forEach(msg => appendMessage(msg.role, msg.text));
 }
 
-// Update sidebar chat list
+// Update sidebar
 function updateSidebar() {
   historyList.innerHTML = '';
   for (let i = chatCounter; i >= 1; i--) {
@@ -224,10 +228,10 @@ newChatBtn.addEventListener('click', () => {
   messages = [];
   currentChatId = null;
   messagesDiv.innerHTML = '';
-  novaOneTime = true; // enable typewriter again for new chat
+  novaOneTime = true;
 });
 
-// =============== Eye Follow Effect (face-api) ===============
+// =============== Eye Follow Effect ===============
 document.addEventListener('mousemove', event => {
   const faceRect = botFace.getBoundingClientRect();
   const centerX = faceRect.left + faceRect.width / 2;
@@ -247,3 +251,88 @@ document.addEventListener('mousemove', event => {
   rightEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
 });
 
+// ================= OFFLINE PIPELINE =================
+const OFFLINE_KB = {
+  greetings: [
+    "Hey there 👋 I'm Nova — online ho ya offline, always here!",
+    "Hello! Nova reporting for duty 🤖",
+    "Hi! Kaise ho? Ready when you are 🚀"
+  ],
+  help: [
+    "You can ask for shayari, a joke, motivation, or simple math 🙂",
+    "Try: 'shayari', 'tell a joke', '2+2*5', 'motivate me' ✨"
+  ],
+  shayari: [
+    `shayari:
+"Zindagi ek kitaab hai, har din ek naya panna,
+Seekhna ho toh har lafz ko samajhna."`,
+    `shayari:
+"Manzilein mil hi jaayengi, gumrah toh rahein sirf raaste,
+Hausla rakh, chal pada hai tu, raushan ho jaayengi raatein."`
+  ],
+  jokes: [
+    "😄 Why did the function break up with the loop? It felt it was going in circles!",
+    "😂 I told my computer I needed a break, it said: ‘No problem—I’ll go to sleep.’"
+  ],
+  motivation: [
+    "✨ Great things take time. Keep going.",
+    "🚀 You’re closer than you think. One more push!"
+  ],
+};
+
+function norm(s){ return (s||'').toLowerCase().replace(/\s+/g,' ').trim(); }
+function detectIntent(text){
+  const t = norm(text);
+  if (/(hi|hello|hey|namaste)/.test(t)) return 'greetings';
+  if (/\b(help|what can you do|features)\b/.test(t)) return 'help';
+  if (/\b(shayari|poem|ghazal)\b/.test(t)) return 'shayari';
+  if (/\b(joke|funny)\b/.test(t)) return 'jokes';
+  if (/\b(motivat|inspire|himmat)\b/.test(t)) return 'motivation';
+  if (looksLikeMath(t)) return 'math';
+  if (/\b(time|date|today|aaj)\b/.test(t)) return 'time';
+  return null;
+}
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function looksLikeMath(t){ return /^[\d\.\s\+\-\*\/\%\^\(\)]+$/.test(t) && /[\d]/.test(t); }
+function safeEvalMath(expr){
+  const sanitized = expr.replace(/\^/g,'**');
+  try {
+    const val = Function(`"use strict"; return (${sanitized});`)();
+    if (typeof val === 'number' && isFinite(val)) return String(val);
+    return null;
+  } catch { return null; }
+}
+function timeReply(){ return `🕒 ${new Date().toLocaleString()} (local)`; }
+async function offlineRespond(message){
+  const intent = detectIntent(message);
+  if (intent === 'math'){ 
+    const ans = safeEvalMath(message);
+    if (ans !== null) return `🧮 ${message} = ${ans}`;
+  }
+  if (intent === 'time') return timeReply();
+  if (intent && OFFLINE_KB[intent]) return pick(OFFLINE_KB[intent]);
+  return pick(OFFLINE_KB.help);
+}
+
+// ================= Force Offline Toggle =================
+const offlineToggle = document.createElement('label');
+offlineToggle.style.position = 'fixed';
+offlineToggle.style.bottom = '10px';
+offlineToggle.style.right = '12px';
+offlineToggle.style.font = '14px system-ui';
+offlineToggle.style.background = '#0003';
+offlineToggle.style.padding = '6px 10px';
+offlineToggle.style.borderRadius = '10px';
+offlineToggle.style.color = '#fff';
+offlineToggle.innerHTML = `<input id="forceOff" type="checkbox"> Force Offline`;
+document.body.appendChild(offlineToggle);
+
+const forceEl = document.getElementById('forceOff');
+forceEl.checked = localStorage.getItem('NOVA_FORCE_OFFLINE')==='1';
+forceEl.addEventListener('change',()=>{
+  if(forceEl.checked) localStorage.setItem('NOVA_FORCE_OFFLINE','1');
+  else localStorage.removeItem('NOVA_FORCE_OFFLINE');
+});
+
+window.addEventListener('online', ()=>appendMessage('bot','✅ Back online.'));
+window.addEventListener('offline',()=>appendMessage('bot','🔌 You are offline. Using local brain.'));
