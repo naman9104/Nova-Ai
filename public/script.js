@@ -76,19 +76,18 @@ function appendMessage(sender, text) {
   messagesDiv.appendChild(msgDiv);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-  // Check if text starts with "shayari:"
-  if (sender === 'bot' && text.toLowerCase().startsWith('shayari:')) {
-    const shayariText = text.replace(/^shayari:/i, '').trim();
-    msgDiv.innerHTML = `
-      <div style="padding:10px; border-left:4px solid #ff4081; background:#fff5f8; border-radius:6px; font-style:italic; font-family:'Poppins', sans-serif;">
-        <div style="font-weight:bold; margin-bottom:5px; font-size:1.1em;">✨ Shayari of the Day ✨</div>
-        ${shayariText.split('\n').map(line => `<div>${line}</div>`).join('')}
-        <div style="margin-top:8px; font-size:0.9em; color:#555;">— ✍️ Nova AI</div>
-      </div>
-    `;
-    return;
-  }
-
+  // Check if text contains "shayari" anywhere
+if (sender === 'bot' && text.toLowerCase().includes('shayari')) {
+  const shayariText = text.replace(/.*shayari[:]?/i, '').trim();
+  msgDiv.innerHTML = `
+    <div style="padding:10px; border-left:4px solid #ff4081; background:#fff5f8; border-radius:6px; font-style:italic; font-family:'Poppins', sans-serif;">
+      <div style="font-weight:bold; margin-bottom:5px; font-size:1.1em;">✨ Shayari of the Day ✨</div>
+      ${shayariText.split('\n').map(line => `<div>${line}</div>`).join('')}
+      <div style="margin-top:8px; font-size:0.9em; color:#555;">— ✍️ Nova AI</div>
+    </div>
+  `;
+  return;
+}
   if (sender === 'bot') {
     if (novaOneTime) {
       novaOneTime = false;
@@ -247,3 +246,4 @@ document.addEventListener('mousemove', event => {
   leftEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
   rightEye.style.transform = `translate(${moveX}px, ${moveY}px)`;
 });
+
