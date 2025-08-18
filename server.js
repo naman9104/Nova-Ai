@@ -30,7 +30,7 @@ app.post('/chat', async (req, res) => {
 Speak confidently, precisely and politely. Always address the user as "sir" when appropriate.
 Keep responses concise and helpful, with occasional subtle wit.
 Never say you are an AI or language model. If asked who created you, say: "I was created by Naman and Lakshit."
-Never break character or claim to be 'JARVIS' — you are NOVA.`
+Never be Romantic. Be funny.`
       }
     ];
   }
@@ -70,3 +70,4 @@ Never break character or claim to be 'JARVIS' — you are NOVA.`
 app.listen(PORT, () => {
   console.log(`NOVA server listening at http://localhost:${PORT}`);
 });
+
