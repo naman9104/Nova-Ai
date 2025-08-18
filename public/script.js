@@ -10,7 +10,7 @@ const historyList = document.getElementById('historyList');
 const sidebar = document.getElementById('chatHistorySidebar');
 const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
 const newChatBtn = document.getElementById('new-chat');
-const botFace = document.getElementById('bot-face'); // Ya jo bhi id hai face container ki
+const botFace = document.getElementById('bot-face'); 
 const leftEye = document.getElementById('left-eye');
 const rightEye = document.getElementById('right-eye');
 
@@ -119,6 +119,21 @@ function processUserMessage(message) {
   if (!message) return;
   appendMessage('user', message);
   messages.push({ role: 'user', text: message });
+
+  // 🚀 Agar user bole ya likhe "open the game" / "start game" / "play snake"
+  const lowerMsg = message.toLowerCase();
+  if (lowerMsg.includes("open the game") || 
+      lowerMsg.includes("start game") || 
+      lowerMsg.includes("play snake")) {
+      
+      appendMessage('bot', "🎮 Opening Snake Byte Game for you...");
+      setTimeout(() => {
+        window.location.href = "SNAKE BYTE.html"; // <-- apna game file ka naam
+      }, 1200);
+      return; // Stop API call
+  }
+
+  // Normal chat
   sendToAPI(message);
 }
 
@@ -214,7 +229,6 @@ newChatBtn.addEventListener('click', () => {
 });
 
 // =============== Eye Follow Effect (face-api) ===============
-
 document.addEventListener('mousemove', event => {
   const faceRect = botFace.getBoundingClientRect();
   const centerX = faceRect.left + faceRect.width / 2;
