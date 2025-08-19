@@ -56,6 +56,7 @@ body {
 }
 
 
+
 .mouth {
   width: 50px;
   height: 8px;
@@ -88,12 +89,12 @@ body {
 }
 
 .user {
-  background-color: #fffcd5;
+  background-color: #fff88f;
   align-self: flex-end;
 }
 
 .bot {
-  background-color: #cbfcff;
+  background-color: #94faff;
   align-self: flex-start;
 }
 
@@ -126,7 +127,7 @@ button:hover {
   transition-duration: 0.3s;
   background: #4714ff;
 }
-#openFileBtn {
+#novapublic {
  
   position: fixed;
   top: 20px;
@@ -142,7 +143,7 @@ button:hover {
   white-space: nowrap; /* text wrap na ho */
   transition-duration: 0.3s;
 }
-#openFileBtn:hover{
+#novapublic:hover{
   background: #670794;
 }
 
@@ -260,6 +261,3 @@ button:hover {
 .user {
   animation: slideIn 0.3s ease forwards;
 }
-
-
-
