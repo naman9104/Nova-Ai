@@ -1,17 +1,15 @@
-// ================= One-time Nova Activation Flag =================
-let novaOneTime = sessionStorage.getItem('novaOneTime') !== '0'; 
-// true for fresh session, false after first reply
+// ================= Typewriter Setup =================
+let typewriterActive = sessionStorage.getItem('typewriterActive') === '1'; // true if previously set
 
-// ================= Typewriter Helper =================
 function isTypewriterActive() {
-  return sessionStorage.getItem('novaOneTime') !== '0';
+  return sessionStorage.getItem('typewriterActive') === '1';
 }
 
 function disableTypewriter() {
-  sessionStorage.setItem('novaOneTime', '0');
+  sessionStorage.setItem('typewriterActive', '0');
 }
 
-// ================= Chatbot Elements =================
+// ================= Chatbot Logic =================
 const chatForm = document.getElementById('chat-form');
 const micBtn = document.getElementById('mic-btn');
 const userInput = document.getElementById('user-input');
@@ -78,7 +76,7 @@ function appendMessage(sender, text) {
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
         setTimeout(typeWriter, speed);
       } else {
-        disableTypewriter(); // After first bot reply
+        disableTypewriter(); // Stop persistence after first reply
       }
     }
     typeWriter();
@@ -168,7 +166,7 @@ function loadChat(id) {
   messages = JSON.parse(stored);
   currentChatId = id;
   messagesDiv.innerHTML = '';
-  sessionStorage.setItem('novaOneTime', '0'); // disable typewriter on loaded chat
+  sessionStorage.setItem('typewriterActive', '0'); // Loaded chat won't use typewriter
   messages.forEach(msg => appendMessage(msg.role, msg.text));
 }
 
@@ -199,8 +197,7 @@ newChatBtn.addEventListener('click', () => {
   messages = [];
   currentChatId = null;
   messagesDiv.innerHTML = '';
-  novaOneTime = true;
-  sessionStorage.setItem('novaOneTime','1'); // enable typewriter for first reply
+  sessionStorage.setItem('typewriterActive','1'); // Enable typewriter for first reply
 });
 
 // ================= Eye Follow =================
@@ -239,6 +236,11 @@ const OFFLINE_KB = {
   ]
 };
 
+// ================= Utility Functions =================
+function looksLikeMath(text) {
+  return /^[0-9\s+\-*/().]+$/.test(text);
+}
+
 function detectIntent(text){
   const t = (text||'').toLowerCase().trim();
   if (/(hi|hello|hey|namaste)/.test(t)) return 'greetings';
@@ -247,7 +249,12 @@ function detectIntent(text){
   if (/\b(motivat|inspire|himmat)\b/.test(t)) return 'motivation';
   if (looksLikeMath(t)) return 'math';
   if (/\b(time|date|today|aaj)\b/.test(t)) return 'time';
-  return null;
+  return 'unknown';
+}
+
+function safeEvalMath(expr) {
+  try { return Function('"use strict"; return (' + expr + ')')(); }
+  catch { return null; }
 }
 
 async function offlineRespond(message){
@@ -256,7 +263,7 @@ async function offlineRespond(message){
     const ans = safeEvalMath(message);
     if (ans !== null) return `🧮 ${message} = ${ans}`;
   }
-  if (intent && OFFLINE_KB[intent]) return OFFLINE_KB[intent][0];
+  if (intent in OFFLINE_KB) return OFFLINE_KB[intent][0];
   return "I'm here to help! Type 'help' to see what I can do.";
 }
 
@@ -275,10 +282,32 @@ document.body.appendChild(offlineToggle);
 
 const forceEl = document.getElementById('forceOff');
 forceEl.checked = localStorage.getItem('NOVA_FORCE_OFFLINE')==='1';
-forceEl.addEventListener('change',()=> {
+forceEl.addEventListener('change',()=>{
   if(forceEl.checked) localStorage.setItem('NOVA_FORCE_OFFLINE','1');
   else localStorage.removeItem('NOVA_FORCE_OFFLINE');
 });
 
 window.addEventListener('online', ()=>appendMessage('bot','✅ Back online.'));
 window.addEventListener('offline',()=>appendMessage('bot','🔌 You are offline. Using local brain.'));
+document.addEventListener('mousemove', event => {
+  const faceRect = botFace.getBoundingClientRect();
+  const centerX = faceRect.left + faceRect.width / 2;
+  const centerY = faceRect.top + faceRect.height / 2;
+
+  const deltaX = event.clientX - centerX;
+  const deltaY = event.clientY - centerY;
+  const maxMove = 25;
+  const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+  const scale = Math.min(maxMove / Math.max(distance, 1), 1);
+
+  const moveX = deltaX * scale;
+  const moveY = deltaY * scale;
+
+  // Apply movement to the wrapper
+  document.querySelectorAll('.eye-wrapper').forEach(wrapper => {
+    wrapper.style.transform = `translate(${moveX}px, ${moveY}px)`;
+  });
+});
+// JS only moves the wrapper
+leftWrapper.style.transform = `translate(${moveX}px, ${moveY}px)`;
+rightWrapper.style.transform = `translate(${moveX}px, ${moveY}px)`;
