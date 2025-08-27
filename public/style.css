@@ -261,3 +261,45 @@ button:hover {
 .user {
   animation: slideIn 0.3s ease forwards;
 }
+#qrContainer {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  text-align: center;
+  z-index: 1000;
+}
+
+#qrContainer img {
+  display: block;
+  margin: 0 auto;
+}
+
+#qrContainer .link {
+  display: block;         /* ✅ side ke bajaye niche aayega */
+  margin: 15px auto 0;    /* upar thoda gap */
+  padding: 10px 20px;
+  background: #4CAF50;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  width: fit-content;     /* button text ke size jitna hoga */
+}
+
+#qrContainer .close-btn {
+  margin-top: 10px;
+  display: block;
+  background: crimson;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-left: auto;
+  margin-right: auto;     /* center me close button bhi */
+}
