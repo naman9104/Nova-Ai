@@ -289,25 +289,3 @@ forceEl.addEventListener('change',()=>{
 
 window.addEventListener('online', ()=>appendMessage('bot','✅ Back online.'));
 window.addEventListener('offline',()=>appendMessage('bot','🔌 You are offline. Using local brain.'));
-document.addEventListener('mousemove', event => {
-  const faceRect = botFace.getBoundingClientRect();
-  const centerX = faceRect.left + faceRect.width / 2;
-  const centerY = faceRect.top + faceRect.height / 2;
-
-  const deltaX = event.clientX - centerX;
-  const deltaY = event.clientY - centerY;
-  const maxMove = 25;
-  const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
-  const scale = Math.min(maxMove / Math.max(distance, 1), 1);
-
-  const moveX = deltaX * scale;
-  const moveY = deltaY * scale;
-
-  // Apply movement to the wrapper
-  document.querySelectorAll('.eye-wrapper').forEach(wrapper => {
-    wrapper.style.transform = `translate(${moveX}px, ${moveY}px)`;
-  });
-});
-// JS only moves the wrapper
-leftWrapper.style.transform = `translate(${moveX}px, ${moveY}px)`;
-rightWrapper.style.transform = `translate(${moveX}px, ${moveY}px)`;
