@@ -5,21 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NOVA</title>
   <link rel="stylesheet" href="style.css" />
- 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
   <div id="chatbot">
     <div id="bot-face">
-  <div id="left-eye" class="eye"></div>
-  <div id="right-eye" class="eye"></div>
-  <div class="mouth"></div>
-  </div>
+      <div id="left-eye" class="eye"></div>
+      <div id="right-eye" class="eye"></div>
+      <div class="mouth"></div>
+    </div>
 
     <div id="chat-container">
       <div id="messages"></div>
       <form id="chat-form">
         <input type="text" id="user-input" placeholder="Talk to NOVA..." autocomplete="off" />
-         <button type="button" id="mic-btn">🎤</button>
+        <button type="button" id="mic-btn">🎤</button>
         <button id="sendBtn" class="send-button">Send</button>
         <button type="button" id="new-chat">New Chat</button>
       </form>
@@ -32,14 +32,31 @@
     <ul id="historyList"></ul>
   </div>
   <button id="toggleSidebarBtn">📙</button>
-<!-- Button -->
-  <button id="novapublic"onclick="openImage()">Open Image</button>
 
-  <script>
-    function openImage() {
-      // Opens image in a new browser tab
-      window.open("qr-code .png", "_blank");
-    } </script>
-  <script defer src="script.js"></script>
+  <!-- Button -->
+  <button id="novapublic" >Show QR</button>
+
+<!-- QR Modal -->
+<div id="qrContainer">
+  <!-- Apna QR image dikhega -->
+  <img id="qrImage" src="qr-code.png" alt="QR Code" width="200">
+
+  <!-- Button fixed QR generator website ke liye -->
+  <a href="https://naman9104.github.io/QR-Code-Generator/" target="_blank" class="link">Open Website</a>
+
+  <button class="close-btn" onclick="closeQR()">Close</button>
+</div>
+
+<script>
+  document.getElementById("novapublic").addEventListener("click", function() {
+    document.getElementById("qrContainer").style.display = "block";
+    document.getElementById("qrImage").src = "qr-code.png"; // tumhari QR image
+  });
+
+  function closeQR() {
+    document.getElementById("qrContainer").style.display = "none";
+  }
+</script>
+<script src="script.js"></script>
 </body>
 </html>
