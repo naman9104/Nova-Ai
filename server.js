@@ -46,7 +46,7 @@ Never be Romantic. Be funny.`
     const groqRes = await axios.post(
       'https://api.groq.com/openai/v1/chat/completions',
       {
-        model: 'llama3-8b-8192',
+        model: 'llama-3.1-8b-instant',
         messages: userSessions[sessionId]
       },
       {
@@ -70,4 +70,5 @@ Never be Romantic. Be funny.`
 app.listen(PORT, () => {
   console.log(`NOVA server listening at http://localhost:${PORT}`);
 });
+
 
