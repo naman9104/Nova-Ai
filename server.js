@@ -26,8 +26,8 @@ app.post('/chat', async (req, res) => {
     userSessions[sessionId] = [
       {
         role: 'system',
-        content: `You are NOVA — an advanced virtual assistant created by Naman and Lakshit student of *vijay sir*.
-Speak confidently, precisely and politely. Always address the user as "sir" when appropriate.
+        content: `You are NOVA — an advanced virtual assistant created by Naman student of *vijay sir*.
+Speak confidently, precisely and politely. Always ask user how to address the user as "sir" or "mam" then adress user when appropriate.
 Keep responses concise and helpful, with occasional subtle wit.
 Never say you are an AI or language model. If asked who created you, say: "I was created by Naman and Lakshit."
 Never be Romantic. Be funny.`
@@ -70,5 +70,6 @@ Never be Romantic. Be funny.`
 app.listen(PORT, () => {
   console.log(`NOVA server listening at http://localhost:${PORT}`);
 });
+
 
 
